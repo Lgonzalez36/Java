@@ -1,0 +1,491 @@
+import java.util.Scanner;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Random;
+/**
+ * Main class for Assignment 2 | WorstFit
+ * March 4, 2020
+ * @author Luis Gonzalez
+ */
+public class WorstFit {
+    public int sum = 0;
+
+    public static void main(String[] args) throws IOException {
+        System.out.println("\nHello, Program 2!!\n");
+
+        System.out.print("How many files do you want to add?: ");
+        Scanner nFiles = new Scanner(System.in);
+        int numFile = nFiles.nextInt();
+        int randomSize;
+        int sumOfFiles = 0;
+        Random rand = new Random();
+        File mainFile = new File("files.txt");
+
+        if (!mainFile.exists()) {
+        	mainFile.createNewFile();
+        }
+        try
+        {   
+            FileWriter fill = new FileWriter(mainFile);
+            for (int i = 0; i < numFile; i++) { //puts in random ints for file sizes
+                randomSize = rand.nextInt(1000001);
+                sumOfFiles = sumOfFiles + randomSize;
+                fill.write(randomSize + System.getProperty( "line.separator" ));
+            }               
+            fill.close();
+            nFiles.close();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
+        double sumFileDub = sumOfFiles;
+        DiskComparator cmp = new DiskComparator();
+        ArrayList<Disk> diskArray = new ArrayList<Disk>();
+        MaxPQ pq = new MaxPQ(numFile);
+        Scanner scanner = new Scanner(new File("files.txt"));
+        int numDisk = 0;
+
+        while (scanner.hasNextInt()) {
+            Key k = new Key(scanner.nextInt());
+            pq.insert(k.getKey());
+            if (k.moreThanHalf()) {
+                Disk d = new Disk();
+                diskArray.add(d);
+                d.setID(numDisk);
+                numDisk++;
+            }
+        }
+
+        Iterator<Key> itr = pq.iterator();
+        Key k = new Key();
+
+        while (itr.hasNext()) {
+            k = itr.next();
+            for (int i=0; i< diskArray.size(); i++) {
+                if ( (i == diskArray.size()-1)) {
+                    Disk d2 = new Disk();
+                    d2.addKeytoDisk(k);
+                }
+                if (diskArray.get(i).spaceLeft(k)) {
+                    diskArray.get(i).addKeytoDisk(k);
+                    break;
+                }
+            }
+            //System.out.println(k.getKeyInt());
+        }
+        
+        Collections.sort(diskArray, Collections.reverseOrder(cmp));
+        System.out.println("_________________________________________________________________________\n");
+        System.out.println("Sum of all files: " + (sumFileDub /1000000) + " GB");
+        System.out.println("Disks used: " + diskArray.size());
+        System.out.println("Maximum space left : " + Collections.max(diskArray, cmp).getspaceLeft() + "\n");
+        
+        if (numFile <= 100) {
+            for (int i=0; i < diskArray.size(); i++) {
+                System.out.print("Id: " + diskArray.get(i).getID()  + "\t" + diskArray.get(i).getspaceLeft()  + ":" );
+                diskArray.get(i).printfiles();
+                System.out.println("\n");
+            }
+        }
+    }
+}
+/*****************************************************************************************************************************/
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
+import java.util.Scanner;
+/**
+ * Main class for Assignment 2 | IntegerSorter
+ * March 4, 2020
+ * @author Luis Gonzalez
+ */
+public class IntegerSorter {
+
+    public static void main(String[] args) throws IOException {
+        System.out.println("\nHello, Program 2!!\n");
+        System.out.print("How many files do you want to add?: ");
+        Scanner nFiles = new Scanner(System.in);
+        int numFile = nFiles.nextInt();
+        int randomSize;
+        int sumOfFiles = 0;
+        Random rand = new Random();
+        File mainFile = new File("files.txt");
+        ArrayList<Key> arrayListKey = new ArrayList<Key>(numFile);
+
+        /**
+         * This block creates and writes into the file
+         */
+        if (!mainFile.exists()) {
+        	mainFile.createNewFile();
+        }
+        	try
+        	{   
+        		FileWriter fill = new FileWriter(mainFile);
+                for (int i = 0; i < numFile; i++) { //puts in random ints for file sizes
+                	randomSize = rand.nextInt(1000001);
+                    sumOfFiles = sumOfFiles + randomSize;
+                    fill.write(randomSize + System.getProperty( "line.separator" ));
+                }               
+                fill.close();
+                nFiles.close();
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        
+        double sumFileDub = sumOfFiles;
+        DiskComparator cmp = new DiskComparator();
+        ArrayList<Disk> diskArray = new ArrayList<Disk>();
+        Scanner scanner = new Scanner(new File("files.txt"));
+        int numDisk = 0;
+
+        while (scanner.hasNextInt()) {
+            Key k = new Key(scanner.nextInt());
+            arrayListKey.add(k.getKey());
+            if (k.moreThanHalf()) {
+                Disk d = new Disk();
+                diskArray.add(d);
+                d.setID(numDisk);
+                numDisk++;
+            }
+        }
+
+        Collections.sort(arrayListKey, Collections.reverseOrder());
+        for (int j=0; j<arrayListKey.size(); j++) {
+            Collections.sort(diskArray, Collections.reverseOrder(cmp));
+            for (int i=0; i < diskArray.size(); i++) {
+                if ((i == diskArray.size()-1)) {
+                    Disk d2 = new Disk();
+                    d2.addKeytoDisk(arrayListKey.get(j).getKey());
+                }
+                if (diskArray.get(i).spaceLeft(arrayListKey.get(j).getKey())) {
+                    diskArray.get(i).addKeytoDisk(arrayListKey.get(j).getKey());
+                    break;
+                }
+                
+            }
+          //System.out.println(arrayListKey.get(j).getKeyInt());
+        }
+
+        Collections.sort(diskArray, Collections.reverseOrder(cmp));
+        System.out.println("_________________________________________________________________________\n");
+        System.out.println("Sum of all files: " + (sumFileDub /1000000) + " GB");
+        System.out.println("Disks used: " + diskArray.size());
+        System.out.println("Maximum space left : " + Collections.max(diskArray, cmp).getspaceLeft() + "\n");
+        
+        if (numFile <= 100){
+            for (int i=0; i < diskArray.size(); i++){
+                System.out.print("Id: " + diskArray.get(i).getID()  + "\t" + diskArray.get(i).getspaceLeft()  + ":" );
+                diskArray.get(i).printfiles();
+                System.out.println("\n");
+            }
+        }
+    }
+}
+/*****************************************************************************************************************************/
+import java.util.ArrayList;
+/**
+ * Disk class for Assignment 2
+ * March 4, 2020
+ * @author Luis Gonzalez
+ */
+public class Disk {
+    private int id;
+    private int spaceLeft;
+    private ArrayList<Key> disk;
+    
+    /**
+     * Ctor for the Disk Class
+     */
+    public Disk() {
+        this.spaceLeft = 1000000;
+        this.disk = new ArrayList<>();
+	}
+     
+    /**
+     * getters for Disk ID and space left
+     * @return int id, space left
+     */
+    public int getID() {return id;}
+    public int getspaceLeft() {return spaceLeft;}
+    public void setID(int id) {this.id = id;}
+
+    /**
+     * Method takes in Key k an subtracks it from
+     * the space. The result is the space left from adding a key
+     * @param k
+     */
+    public void addKeytoDisk(Key k){
+        this.spaceLeft =  this.spaceLeft - k.getKeyInt();
+        disk.add(k);
+    }
+
+    /**
+     * Method checks to see if the disk has enough space left 
+     * to add another key. If true it returns true
+     * if false it returns false
+     * @param k2
+     * @return
+     */
+	public boolean spaceLeft(Key k2) {
+        int tempSpace;
+        int size = k2.getKeyInt();
+        tempSpace = spaceLeft - size;
+        if (tempSpace > -1 ){
+            return true;
+        }
+		return false;
+	}
+     
+    /**
+     * Method prints the files from the disk
+     */
+	public void printfiles() {
+        System.out.print("  " + "[ ");
+        for (int i=0; i < disk.size(); i++){
+            System.out.print(disk.get(i).getKeyInt() + " ");
+        }
+        System.out.print("]");
+	}
+}
+/*****************************************************************************************************************************/
+/**
+ * Key class for Assignment 2
+ * March 4, 2020
+ * @author Luis Gonzalez
+ */
+public class Key implements Key340 {
+    private int fileSize;
+
+    /**
+     * Key Ctor initilating the file size by int i
+     * @param i
+     */
+    public Key(int i){
+        this.fileSize = i;
+    }
+
+    /**
+     * Defult Key
+     */
+    public Key() {
+	}
+
+    /**
+     * Sets this key object's file size
+     * @param k
+     */
+    public void setKey(int k){
+        this.fileSize = k;
+    }
+
+    /**
+     * @return key
+     */
+    public Key getKey() {return this;}
+
+    /**
+     * returns the key size
+     */
+    public int getKeyInt(){
+        return this.fileSize;
+    }
+
+    /**
+     * compares the key by its int file sizes
+     */
+    @Override
+    public int compareTo(Key o) {
+        return Integer.compare(this.fileSize, o.getKeyInt());
+    }
+
+    /**
+     * checks to see if the file is >= .5GB
+     * returns true if it is and false if it is not
+     */
+	public boolean moreThanHalf() {
+        if (this.fileSize >= (500000))
+            return true;
+		return false;
+	}
+}
+
+/*****************************************************************************************************************************/
+public interface Key340 extends Comparable<Key>{
+    /**
+     * Getter for the word field.
+     * There is no setter; the word field is immutable.
+     * @return Returns the word being counted
+     */
+    public int getKeyInt();
+    public boolean moreThanHalf();
+  
+}
+/*****************************************************************************************************************************/
+import java.util.Comparator;
+/**
+ * Key Comparator class for Assignment 2
+ * March 4, 2020
+ * @author Luis Gonzalez
+ */
+public class KeyComparator implements Comparator<Key> {
+    /** KeyComparator Compares the integer value of Key */
+
+    /**
+     * Ctor for Results to use
+     */
+    public KeyComparator() {
+    }
+
+    /** This Method Compares the integer value of Key*/
+    public int compare(Key o1, Key o2) {
+        return (int) (o1.getKeyInt() - o2.getKeyInt());
+    }
+}
+/*****************************************************************************************************************************/
+import java.util.Comparator;
+/**
+ * Disk Comparator class for Assignment 2
+ * March 4, 2020
+ * @author Luis Gonzalez
+ */
+public class DiskComparator implements Comparator<Disk> {
+    /** DiskComparator Compares the integer value of Disk */
+
+    /**
+     * Ctor
+     */
+    public DiskComparator() {
+    }
+
+    /** This Method Compares the integer value of Disk*/
+    public int compare(Disk o1, Disk o2) {
+        return (o1.getspaceLeft() - o2.getspaceLeft());
+    }
+}
+/*****************************************************************************************************************************/
+README.txt
+/******************************************************************
+* ------------------------- TO DO -------------------------------- 
+*                  Jeff's steps 1,5,6 completed[1,0,0] 
+*                  Luis's steps 2,3,4 completed[2,3,4,5,6]
+* ---------------------------------------------------------------- 
+* 1. Create Random input files 
+*      - create a single txt file of n "files" n = (100, 200) 
+*      - make n modifiable by the user input 
+*      - each fake n files is 0-1,000,000 
+* 2. Read file 
+*      - read file line by line and insert it sssss
+* 3. Insert to priority Queue
+*      - each line read is a "file size" 
+*      - insert each line to priority Queue 
+* 4. Insert files into disk of size 1GB from decending order 
+*      - Call max - if < 1GB, add to disk 
+*      - store max1 - Call max2 - add max1 and max2 
+* 5. Sort Disk by Worst-fit, Decending Order 
+*      - sort the Disk from most space avaiable to least
+* 6. print Disk in Decending Order 
+*      - If n is < 100 print out the disk in decreasing order 
+*      - Id, Space Left, list of Files[]
+*****************************************************************
+*/
+
+
+/**********************************************************************
+*      Problem with my partner (second time)
+ **********************************************************************/
+Prof, My partner was Jeff G, He was not a very good partner. The first 
+assignment we worked together he did not do anything. I gave him a 
+second chance and he did very little. His only contribution was the 
+creation of file sizes. The rest was my work. I don't think he deserves 
+the grade we had last HW and also does not deserve a good grade from 
+my hard work for this assignment. I want to work alone for the rest 
+of the semester. He just slows me down and gives me more stress.
+ **********************************************************************/
+
+/******************************************************************************
+ *  Results
+ *****************************************************************************/
+        1. IntegerSorter
+                N                                disk used
+              - 100............................. 47
+              - 1,000........................... 517
+              - 10,000.......................... 4,990
+              - 100,000......................... 417,604
+              - 1,000,000....................... 
+
+       2. WorstFit
+                N                                disk used
+              - 100............................. 42
+              - 1,000........................... 525
+              - 10,000.......................... 4,973
+              - 100,000......................... 207,813
+              - 1,000,000....................... 
+
+/******************************************************************************
+ *  Order of growth Big(O)
+ *****************************************************************************/
+        1. WorstFit
+              - Heap
+                     - Big(O) of nlogn
+                     - Heap performance is log N (excellent!):
+                     - insert is O(log n) because the tree depth is log n.
+                     - removeMin is O(log n)... the min is right there, O(1), but you have to swap and
+                     - restore the heap, which is O( log n)
+              - disk made 
+                     - Big(O) of N * M 
+                     - N = disk size
+                     - M = heap size
+        2. IntegerSorter
+              - Array
+                     - Big(O) of n
+                     - insert is O(1) because the it inserts it at in instance.
+                     - removeMin is.. the min is right there, O(1), but you have to swap and
+                     - restore the heap, which is O(n)
+              - disk made 
+                     - Big(O) of N * M 
+                     - N = disk size
+                     - M = heap size
+ 
+/******************************************************************************
+ *  Known bugs / limitations.
+ *****************************************************************************/
+        -not that im aware of
+
+
+/******************************************************************************
+ *  Describe whatever help (if any) that you received.
+ *  Don't include readings, lectures, and precepts, but do
+ *  include any help from people (including
+ *  classmates and friends) and attribute them by name.
+ *****************************************************************************/
+        - https://stackoverflow.com/questions/36726260/how-does-collections-sort-work
+
+/******************************************************************************
+ *  Describe any serious problems you encountered.                    
+ *****************************************************************************/
+        - Making the disk was difficult
+        - Bad partner
+
+
+/******************************************************************************
+ *  List any other comments here. Feel free to provide any feedback   
+ *  on how much you learned from doing the assignment, and whether    
+ *  you enjoyed doing it.                                             
+ *****************************************************************************/
+
+        - I enjoyed it 
+        - It was fun. Just was a little confused on what InegerSorter.java 
+        - was. I feel like a better explaination would've help on the word .dox
+
